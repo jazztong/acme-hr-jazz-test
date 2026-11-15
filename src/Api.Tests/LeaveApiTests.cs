@@ -58,5 +58,29 @@ public class LeaveApiTests(ApiFactory api) : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.NotFound, (await aina.PostAsync("/leave/99999/approve", null)).StatusCode);
     }
 
+    [Fact]
+    public async Task Summary_of_another_teams_employee_is_403()
+    {
+        var otherManager = await api.SignedInAs("ben.lim2@acme-hr.example"); // manages team 2, Farah is in team 1
+        Assert.Equal(HttpStatusCode.Forbidden, (await otherManager.GetAsync("/employees/6/summary")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Employee_sees_own_summary_with_approved_days_this_year()
+    {
+        var farah = await api.SignedInAs(People.Farah);
+        var res = await farah.GetAsync("/employees/6/summary");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        Assert.Equal(3, (await res.Content.ReadFromJsonAsync<Summary>())!.DaysTakenThisYear); // seed: 3 approved days this year
+    }
+
+    [Fact]
+    public async Task Summary_of_unknown_employee_is_404()
+    {
+        var hr = await api.SignedInAs(People.Dina);
+        Assert.Equal(HttpStatusCode.NotFound, (await hr.GetAsync("/employees/99999/summary")).StatusCode);
+    }
+
     record Row(int Id, int EmployeeId, string Status);
+    record Summary(int EmployeeId, decimal DaysTakenThisYear);
 }
