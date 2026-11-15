@@ -20,7 +20,7 @@ public class FakeClaude(params string[] replies) : IClaudeChat
     static string Msg(string stop, string contentJson) =>
         $$"""{"id":"msg_test","type":"message","role":"assistant","model":"claude-sonnet-5-5","stop_reason":"{{stop}}","stop_sequence":null,"usage":{"input_tokens":100,"output_tokens":20},"content":[{{contentJson}}]}""";
 
-    public static string Text(string text) => Msg("end_turn", $$"""{"type":"text","text":{{JsonSerializer.Serialize(text)}}}""");
+    public static string Text(string text, string stop = "end_turn") => Msg(stop, $$"""{"type":"text","text":{{JsonSerializer.Serialize(text)}}}""");
 
     public static string ToolUse(string id, string name, object input) =>
         Msg("tool_use", $$"""{"type":"tool_use","id":"{{id}}","name":"{{name}}","input":{{JsonSerializer.Serialize(input)}}}""");
