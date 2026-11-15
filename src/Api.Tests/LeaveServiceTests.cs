@@ -55,6 +55,19 @@ public class LeaveServiceTests
     }
 
     [Fact]
+    public async Task Days_taken_this_year_counts_only_approved_leave()
+    {
+        using var db = TestDb.Create();
+        var year = DateTime.UtcNow.Year;
+        db.LeaveRequests.AddRange(
+            new LeaveRequest { EmployeeId = 6, StartDate = new(year, 6, 1), EndDate = new(year, 6, 5), Status = LeaveStatus.Rejected },
+            new LeaveRequest { EmployeeId = 6, StartDate = new(year, 7, 1), EndDate = new(year, 7, 3), Status = LeaveStatus.Pending });
+        db.SaveChanges();
+
+        Assert.Equal(3, await new LeaveService(db).DaysTakenThisYearAsync(6)); // seed: 3 approved days; rejected and pending are not taken
+    }
+
+    [Fact]
     public void Rejected_leave_days_still_computed() =>
         Assert.Equal(1, LeaveService.DaysOf(new LeaveRequest { StartDate = new(2026, 11, 18), EndDate = new(2026, 11, 18), Status = LeaveStatus.Rejected }));
 }

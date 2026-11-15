@@ -27,12 +27,12 @@ public class LeaveService(AcmeDb db)
         return new LeaveBalance(employeeId, emp.AnnualEntitlement, used, pending, emp.AnnualEntitlement - used - pending);
     }
 
-    /// <summary>Days taken this year, for the employee summary card.</summary>
+    /// <summary>Days taken this year, for the employee summary card. Only Approved leave is taken.</summary>
     public async Task<decimal> DaysTakenThisYearAsync(int employeeId)
     {
         var year = DateTime.UtcNow.Year;
         var requests = await db.LeaveRequests
-            .Where(r => r.EmployeeId == employeeId && r.StartDate.Year == year)
+            .Where(r => r.EmployeeId == employeeId && r.Status == LeaveStatus.Approved && r.StartDate.Year == year)
             .ToListAsync();
         return requests.Sum(DaysOf);
     }
